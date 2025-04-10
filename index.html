@@ -26,9 +26,8 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        animation: fadeIn 1s ease;
         transition: background 0.5s ease, color 0.5s ease;
-        height: 100vh;
+        min-height: 100vh;
       }
 
       main {
@@ -37,17 +36,15 @@
         max-width: 700px;
       }
 
-      h2,
-      h3 {
+      h2 {
         text-align: center;
+        margin-bottom: 1rem;
       }
 
       .toggle-switch {
         position: absolute;
         top: 1rem;
         right: 1rem;
-        display: flex;
-        align-items: center;
         cursor: pointer;
       }
 
@@ -84,22 +81,20 @@
       }
 
       #subjects {
-        width: 100%;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
       }
 
       .subject {
         background: var(--card-bg);
         backdrop-filter: blur(10px);
         border-radius: 16px;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        border: 1px solid rgba(255, 255, 255, 0.18);
         padding: 1rem;
         margin-bottom: 1rem;
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
       }
 
       .subject:hover {
@@ -120,15 +115,12 @@
         border-color: red;
       }
 
-      .error input {
-        border-color: red !important;
-      }
-
       .button-container {
         display: flex;
         justify-content: center;
         flex-wrap: wrap;
         gap: 0.5rem;
+        margin-top: 1rem;
       }
 
       button {
@@ -139,7 +131,7 @@
         color: white;
         font-weight: bold;
         cursor: pointer;
-        transition: background 0.3s ease, transform 0.2s ease;
+        transition: background 0.3s, transform 0.2s;
       }
 
       button:hover {
@@ -161,12 +153,14 @@
         transform: scale(1.05);
       }
 
+      @media (max-width: 600px) {
+        .subject {
+          flex-direction: column;
+        }
+      }
+
       .result-box {
-        background: linear-gradient(
-          to right,
-          #667eea,
-          #764ba2
-        ); /* match site colors */
+        background: linear-gradient(to right, #667eea, #764ba2);
         color: white;
         padding: 1.5rem;
         margin-top: 1.5rem;
@@ -175,54 +169,34 @@
         text-align: center;
         font-size: 1.2rem;
         font-weight: 500;
-        transition: background-color 0.4s, color 0.4s;
-        animation: fadeIn 0.6s ease-in-out;
+        display: none;
+        animation: popIn 0.4s ease-in-out;
       }
 
-      .result-box.success {
-        background-color: #d4edda;
-        color: white;
-      }
-
-      .result-box.warning {
-        background-color: #fff3cd;
-        color: white;
-      }
-
-      .result-box.danger {
-        background-color: #f8d7da;
-        color: white;
-      }
-
-      @keyframes fadeIn {
-        from {
+      @keyframes popIn {
+        0% {
           opacity: 0;
-          transform: translateY(20px);
+          transform: scale(0.8) translateY(20px);
         }
-        to {
+        100% {
           opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @media (max-width: 600px) {
-        .subject {
-          flex-direction: column;
-          align-items: stretch;
+          transform: scale(1) translateY(0);
         }
       }
 
       footer {
-        color: #7b7b7b;
         text-align: center;
-        padding: 10px;
+        color: #777;
+        margin-top: 2rem;
       }
 
       a {
-        color: #5b5a5a;
+        color: inherit;
+        text-decoration: underline;
       }
     </style>
   </head>
+
   <body>
     <main>
       <div class="toggle-switch" onclick="toggleDarkMode()">
@@ -234,10 +208,11 @@
         <button onclick="addSubject()">Add Subject</button>
         <button onclick="calculateGPA()">Calculate GPA</button>
       </div>
-      <div id="result" class="result-box" style="display: none"></div>
+      <div id="result" class="result-box"></div>
     </main>
+
     <footer>
-      <p>Built by <a href="https://t.me/Clem_404">Clem</a></p>
+      <p>Built by <a href="https://t.me/Clem_404" target="_blank">Clem</a></p>
     </footer>
 
     <script>
@@ -256,8 +231,8 @@
         container.className = "subject";
 
         const nameInput = createInput("text", "Subject Name");
-        const creditInput = createInput("number", "Credit", 0.01);
-        creditInput.min = 0.01;
+        const creditInput = createInput("number", "Credit");
+        creditInput.min = 0;
         const gradeInput = createInput(
           "number",
           "Grade (Max 100.0)",
@@ -279,70 +254,72 @@
         const subjects = document.querySelectorAll(".subject");
         let totalScore = 0;
         let totalCredit = 0;
-        let isValid = true;
+        let hasError = false;
 
         subjects.forEach((subject) => {
-          subject.classList.remove("error");
-          const [nameInput, creditInput, gradeInput] =
-            subject.querySelectorAll("input");
-          const credit = parseFloat(creditInput.value);
-          const grade = parseFloat(gradeInput.value);
+          const inputs = subject.querySelectorAll("input");
+          const credit = parseFloat(inputs[1].value);
+          const grade = parseFloat(inputs[2].value);
 
           if (
-            !nameInput.value ||
+            !inputs[0].value ||
             isNaN(credit) ||
-            credit <= 0 ||
             isNaN(grade) ||
-            grade < 0 ||
-            grade > 100
+            grade > 100 ||
+            credit <= 0 ||
+            grade < 0
           ) {
+            hasError = true;
             subject.classList.add("error");
-            isValid = false;
-            return;
+          } else {
+            subject.classList.remove("error");
+            totalScore += credit * grade;
+            totalCredit += credit;
           }
-
-          totalScore += credit * grade;
-          totalCredit += credit;
         });
 
         const resultBox = document.getElementById("result");
 
-        if (!isValid || totalCredit === 0) {
-          resultBox.className = "result-box danger";
+        if (hasError) {
           resultBox.innerText =
-            "Please fill all fields correctly. Grade must be between 0 and 100.";
+            "❌ Please fill in all fields correctly. Grade must be between 0 and 100.";
           resultBox.style.display = "block";
+          resultBox.style.background = "#ff6b6b";
           return;
         }
 
-        const gpa100 = totalScore / totalCredit;
-        const gpa4 = (gpa100 / 100) * 4;
-        const gpa80 = (gpa100 / 100) * 80;
+        if (totalCredit > 0) {
+          const gpa100 = totalScore / totalCredit;
+          const gpa4 = (gpa100 / 100) * 4;
+          const gpa80 = (gpa100 / 100) * 80;
 
-        // Set visual style based on performance
-        if (gpa100 >= 90) {
-          resultBox.className = "result-box success";
-        } else if (gpa100 >= 75) {
-          resultBox.className = "result-box warning";
-        } else {
-          resultBox.className = "result-box danger";
-        }
-
-        resultBox.innerHTML = `
+          resultBox.innerHTML = `
           ✅ <strong>GPA Results</strong><br><br>
           📚 <strong>Total Credits:</strong> ${totalCredit.toFixed(2)}<br>
           🎯 <strong>GPA (100):</strong> ${gpa100.toFixed(2)}<br>
           🌟 <strong>GPA (4.0):</strong> ${gpa4.toFixed(2)}<br>
           🏅 <strong>GPA (80 scale):</strong> ${gpa80.toFixed(2)}
         `;
+          resultBox.style.background =
+            "linear-gradient(to right, #667eea, #764ba2)";
+          resultBox.style.color = "white";
+        } else {
+          resultBox.innerText = "❌ Please enter valid subject data.";
+          resultBox.style.background = "#ff6b6b";
+        }
+
+        // Reset animation
         resultBox.style.display = "block";
+        resultBox.classList.remove("result-box");
+        void resultBox.offsetWidth;
+        resultBox.classList.add("result-box");
       }
 
       function toggleDarkMode() {
         document.body.classList.toggle("dark-mode");
       }
 
-      // Start with one subject input
+      // Initialize with one subject
       addSubject();
     </script>
   </body>
