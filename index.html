@@ -30,8 +30,11 @@
         transition: background 0.5s ease, color 0.5s ease;
         height: 100vh;
       }
+
       main {
         flex: 1;
+        width: 100%;
+        max-width: 700px;
       }
 
       h2,
@@ -82,7 +85,6 @@
 
       #subjects {
         width: 100%;
-        max-width: 600px;
         margin-bottom: 1.5rem;
       }
 
@@ -117,14 +119,20 @@
       input:invalid {
         border-color: red;
       }
+
+      .error input {
+        border-color: red !important;
+      }
+
       .button-container {
         display: flex;
         justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
       }
 
       button {
         padding: 0.6rem 1.2rem;
-        margin: 0.25rem;
         border: none;
         border-radius: 12px;
         background: linear-gradient(135deg, #667eea, #764ba2);
@@ -153,6 +161,39 @@
         transform: scale(1.05);
       }
 
+      .result-box {
+        background: linear-gradient(
+          to right,
+          #667eea,
+          #764ba2
+        ); /* match site colors */
+        color: white;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 500;
+        transition: background-color 0.4s, color 0.4s;
+        animation: fadeIn 0.6s ease-in-out;
+      }
+
+      .result-box.success {
+        background-color: #d4edda;
+        color: white;
+      }
+
+      .result-box.warning {
+        background-color: #fff3cd;
+        color: white;
+      }
+
+      .result-box.danger {
+        background-color: #f8d7da;
+        color: white;
+      }
+
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -176,6 +217,7 @@
         text-align: center;
         padding: 10px;
       }
+
       a {
         color: #5b5a5a;
       }
@@ -192,7 +234,7 @@
         <button onclick="addSubject()">Add Subject</button>
         <button onclick="calculateGPA()">Calculate GPA</button>
       </div>
-      <h3 id="result"></h3>
+      <div id="result" class="result-box" style="display: none"></div>
     </main>
     <footer>
       <p>Built by <a href="https://t.me/Clem_404">Clem</a></p>
@@ -209,22 +251,19 @@
         return input;
       }
 
-      /*************  ✨ Windsurf Command ⭐  *************/
-      /**
-       * Adds a new subject input form to the subjects container.
-       * The form includes fields for subject name, credit, and grade,
-       * as well as a button to remove the subject.
-       */
-
-      /*******  fa0f270d-3704-44ea-a651-507d6a839335  *******/
       function addSubject() {
         const container = document.createElement("div");
         container.className = "subject";
 
         const nameInput = createInput("text", "Subject Name");
-        const creditInput = createInput("number", "Credit");
-        creditInput.min = 0;
-        const gradeInput = createInput("number", "Grade (Max 5.0)", 0.01, 5);
+        const creditInput = createInput("number", "Credit", 0.01);
+        creditInput.min = 0.01;
+        const gradeInput = createInput(
+          "number",
+          "Grade (Max 100.0)",
+          0.01,
+          100
+        );
         gradeInput.min = 0;
 
         const removeBtn = document.createElement("button");
@@ -238,53 +277,72 @@
 
       function calculateGPA() {
         const subjects = document.querySelectorAll(".subject");
-        let totalGPA = 0;
+        let totalScore = 0;
         let totalCredit = 0;
-        let hasError = false;
+        let isValid = true;
 
         subjects.forEach((subject) => {
-          const inputs = subject.querySelectorAll("input");
-          const credit = parseFloat(inputs[1].value);
-          const grade = parseFloat(inputs[2].value);
+          subject.classList.remove("error");
+          const [nameInput, creditInput, gradeInput] =
+            subject.querySelectorAll("input");
+          const credit = parseFloat(creditInput.value);
+          const grade = parseFloat(gradeInput.value);
 
           if (
-            !inputs[0].value ||
+            !nameInput.value ||
             isNaN(credit) ||
-            isNaN(grade) ||
-            grade > 5.0 ||
             credit <= 0 ||
-            grade < 0
+            isNaN(grade) ||
+            grade < 0 ||
+            grade > 100
           ) {
-            hasError = true;
             subject.classList.add("error");
-          } else {
-            subject.classList.remove("error");
-            totalGPA += credit * grade;
-            totalCredit += credit;
+            isValid = false;
+            return;
           }
+
+          totalScore += credit * grade;
+          totalCredit += credit;
         });
 
-        const result = document.getElementById("result");
-        if (hasError) {
-          result.innerText =
-            "Please fill in all fields correctly. GPA must be from 0.00 to 5.00.";
-          result.style.color = "red";
-        } else if (totalCredit > 0) {
-          result.innerText = `Your GPA is: ${(totalGPA / totalCredit).toFixed(
-            2
-          )}`;
-          result.style.color = "var(--text-color)";
-        } else {
-          result.innerText = "Please enter valid subject data.";
-          result.style.color = "red";
+        const resultBox = document.getElementById("result");
+
+        if (!isValid || totalCredit === 0) {
+          resultBox.className = "result-box danger";
+          resultBox.innerText =
+            "Please fill all fields correctly. Grade must be between 0 and 100.";
+          resultBox.style.display = "block";
+          return;
         }
+
+        const gpa100 = totalScore / totalCredit;
+        const gpa4 = (gpa100 / 100) * 4;
+        const gpa80 = (gpa100 / 100) * 80;
+
+        // Set visual style based on performance
+        if (gpa100 >= 90) {
+          resultBox.className = "result-box success";
+        } else if (gpa100 >= 75) {
+          resultBox.className = "result-box warning";
+        } else {
+          resultBox.className = "result-box danger";
+        }
+
+        resultBox.innerHTML = `
+          ✅ <strong>GPA Results</strong><br><br>
+          📚 <strong>Total Credits:</strong> ${totalCredit.toFixed(2)}<br>
+          🎯 <strong>GPA (100):</strong> ${gpa100.toFixed(2)}<br>
+          🌟 <strong>GPA (4.0):</strong> ${gpa4.toFixed(2)}<br>
+          🏅 <strong>GPA (80 scale):</strong> ${gpa80.toFixed(2)}
+        `;
+        resultBox.style.display = "block";
       }
 
       function toggleDarkMode() {
         document.body.classList.toggle("dark-mode");
       }
 
-      // Add one subject by default
+      // Start with one subject input
       addSubject();
     </script>
   </body>
