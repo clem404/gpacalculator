@@ -28,6 +28,10 @@
         align-items: center;
         animation: fadeIn 1s ease;
         transition: background 0.5s ease, color 0.5s ease;
+        height: 100vh;
+      }
+      main {
+        flex: 1;
       }
 
       h2,
@@ -113,6 +117,10 @@
       input:invalid {
         border-color: red;
       }
+      .button-container {
+        display: flex;
+        justify-content: center;
+      }
 
       button {
         padding: 0.6rem 1.2rem;
@@ -165,9 +173,8 @@
 
       footer {
         color: #7b7b7b;
-        position: fixed;
-        bottom: 10px;
         text-align: center;
+        padding: 10px;
       }
       a {
         color: #5b5a5a;
@@ -175,16 +182,18 @@
     </style>
   </head>
   <body>
-    <div class="toggle-switch" onclick="toggleDarkMode()">
-      <div class="switch"></div>
-    </div>
-    <h2>GPA Calculator</h2>
-    <div id="subjects"></div>
-    <div>
-      <button onclick="addSubject()">Add Subject</button>
-      <button onclick="calculateGPA()">Calculate GPA</button>
-    </div>
-    <h3 id="result"></h3>
+    <main>
+      <div class="toggle-switch" onclick="toggleDarkMode()">
+        <div class="switch"></div>
+      </div>
+      <h2>GPA Calculator</h2>
+      <div id="subjects"></div>
+      <div class="button-container">
+        <button onclick="addSubject()">Add Subject</button>
+        <button onclick="calculateGPA()">Calculate GPA</button>
+      </div>
+      <h3 id="result"></h3>
+    </main>
     <footer>
       <p>Built by <a href="https://t.me/Clem_404">Clem</a></p>
     </footer>
@@ -200,6 +209,14 @@
         return input;
       }
 
+      /*************  ✨ Windsurf Command ⭐  *************/
+      /**
+       * Adds a new subject input form to the subjects container.
+       * The form includes fields for subject name, credit, and grade,
+       * as well as a button to remove the subject.
+       */
+
+      /*******  fa0f270d-3704-44ea-a651-507d6a839335  *******/
       function addSubject() {
         const container = document.createElement("div");
         container.className = "subject";
