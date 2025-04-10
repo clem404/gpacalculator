@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GPA Calculator</title>
+    <style>
+      :root {
+        --bg-color: linear-gradient(to right, #c9d6ff, #e2e2e2);
+        --text-color: #333;
+        --card-bg: rgba(255, 255, 255, 0.2);
+      }
+
+      body.dark-mode {
+        --bg-color: linear-gradient(to right, #141e30, #243b55);
+        --text-color: #f0f0f0;
+        --card-bg: rgba(0, 0, 0, 0.3);
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: fadeIn 1s ease;
+        transition: background 0.5s ease, color 0.5s ease;
+      }
+
+      h2,
+      h3 {
+        text-align: center;
+      }
+
+      .toggle-switch {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 28px;
+        background-color: #ccc;
+        border-radius: 34px;
+        transition: background-color 0.4s;
+      }
+
+      .switch::before {
+        content: "☀️";
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        left: 3px;
+        top: 3px;
+        font-size: 16px;
+        text-align: center;
+        line-height: 22px;
+        transition: transform 0.4s, content 0.4s;
+      }
+
+      .dark-mode .switch {
+        background-color: #666;
+      }
+
+      .dark-mode .switch::before {
+        transform: translateX(22px);
+        content: "🌙";
+      }
+
+      #subjects {
+        width: 100%;
+        max-width: 600px;
+        margin-bottom: 1.5rem;
+      }
+
+      .subject {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .subject:hover {
+        transform: scale(1.03);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      input {
+        padding: 0.5rem;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        flex: 1 1 100%;
+        min-width: 120px;
+        font-size: 1rem;
+      }
+
+      input:invalid {
+        border-color: red;
+      }
+
+      button {
+        padding: 0.6rem 1.2rem;
+        margin: 0.25rem;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+
+      button:hover {
+        background: linear-gradient(135deg, #5a67d8, #6b46c1);
+        transform: scale(1.05);
+      }
+
+      .remove-btn {
+        background: #ff6b6b;
+        color: white;
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+
+      .remove-btn:hover {
+        background: #ff4c4c;
+        transform: scale(1.05);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .subject {
+          flex-direction: column;
+          align-items: stretch;
+        }
+      }
+
+      footer {
+        color: #7b7b7b;
+        position: fixed;
+        bottom: 10px;
+        text-align: center;
+      }
+      a {
+        color: #5b5a5a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toggle-switch" onclick="toggleDarkMode()">
+      <div class="switch"></div>
+    </div>
+    <h2>GPA Calculator</h2>
+    <div id="subjects"></div>
+    <div>
+      <button onclick="addSubject()">Add Subject</button>
+      <button onclick="calculateGPA()">Calculate GPA</button>
+    </div>
+    <h3 id="result"></h3>
+    <footer>
+      <p>Built by <a href="https://t.me/Clem_404">Clem</a></p>
+    </footer>
+
+    <script>
+      function createInput(type, placeholder, step = null, max = null) {
+        const input = document.createElement("input");
+        input.type = type;
+        input.placeholder = placeholder;
+        input.required = true;
+        if (step) input.step = step;
+        if (max) input.max = max;
+        return input;
+      }
+
+      function addSubject() {
+        const container = document.createElement("div");
+        container.className = "subject";
+
+        const nameInput = createInput("text", "Subject Name");
+        const creditInput = createInput("number", "Credit");
+        creditInput.min = 0;
+        const gradeInput = createInput("number", "Grade (Max 5.0)", 0.01, 5);
+        gradeInput.min = 0;
+
+        const removeBtn = document.createElement("button");
+        removeBtn.innerText = "Remove";
+        removeBtn.className = "remove-btn";
+        removeBtn.onclick = () => container.remove();
+
+        container.append(nameInput, creditInput, gradeInput, removeBtn);
+        document.getElementById("subjects").appendChild(container);
+      }
+
+      function calculateGPA() {
+        const subjects = document.querySelectorAll(".subject");
+        let totalGPA = 0;
+        let totalCredit = 0;
+        let hasError = false;
+
+        subjects.forEach((subject) => {
+          const inputs = subject.querySelectorAll("input");
+          const credit = parseFloat(inputs[1].value);
+          const grade = parseFloat(inputs[2].value);
+
+          if (
+            !inputs[0].value ||
+            isNaN(credit) ||
+            isNaN(grade) ||
+            grade > 5.0 ||
+            credit <= 0 ||
+            grade < 0
+          ) {
+            hasError = true;
+            subject.classList.add("error");
+          } else {
+            subject.classList.remove("error");
+            totalGPA += credit * grade;
+            totalCredit += credit;
+          }
+        });
+
+        const result = document.getElementById("result");
+        if (hasError) {
+          result.innerText =
+            "Please fill in all fields correctly. GPA must be from 0.00 to 5.00.";
+          result.style.color = "red";
+        } else if (totalCredit > 0) {
+          result.innerText = `Your GPA is: ${(totalGPA / totalCredit).toFixed(
+            2
+          )}`;
+          result.style.color = "var(--text-color)";
+        } else {
+          result.innerText = "Please enter valid subject data.";
+          result.style.color = "red";
+        }
+      }
+
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark-mode");
+      }
+
+      // Add one subject by default
+      addSubject();
+    </script>
+  </body>
+</html>
